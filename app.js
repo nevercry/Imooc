@@ -1,20 +1,36 @@
 var express = require('express')
 var path = require('path')
 var mongoose = require('mongoose')
+var session = require('express-session')
+var mongoStore = require('connect-mongo')(session)
 var _ = require('underscore')
 var Movie = require('./models/movie')
+var User = require('./models/User')
 var port = process.env.PORT || 3000
-var app = express()
 var bodyParser = require('body-parser')
+var cookieParser = require('cookie-parser')
+var app = express()
+var dbUrl = 'mongodb://localhost/imooc'
 
 
-mongoose.connect('mongodb://localhost/imooc')
+
+mongoose.connect(dbUrl)
 
 
 app.set('views', './views/pages')
 app.set('view engine', 'jade')
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(bodyParser.urlencoded({extended: true}))
+app.use(cookieParser())
+app.use(session({
+	secret: 'imooc',
+	resave: true,
+	saveUninitialized: true,
+	store: new mongoStore({
+		url: dbUrl,
+		collection: 'sessions'
+	})
+}))
 app.locals.moment = require('moment')
 app.listen(port)
 
@@ -23,6 +39,15 @@ console.log('imooc start on port ' + port)
 
 // index page 
 app.get('/', function(req, res) {
+	console.log('user in session: ')
+	console.log(req.session.user)
+
+	var _user = req.session.user
+
+	if (_user) {
+		app.locals.user = _user
+	}
+
 	Movie.fetch(function(err, movies){
 		if (err) {
 			console.log(err)
@@ -31,6 +56,83 @@ app.get('/', function(req, res) {
 		res.render('index', {
 			title: 'imooc 首页',
 			movies: movies
+		})
+	})
+})
+
+// signup
+app.post('/user/signup', function(req, res) {
+	var _user = req.body.user
+
+
+	User.find({name: _user.name}, function(err, user) {
+		if (err) {
+			console.log(err)
+		}
+
+		if (user) {
+			return res.redirect('/')
+		} else {
+			var user = new User(_user)
+
+			user.save(function(err, user) {
+				if (err) {
+					console.log(err)
+				}
+
+				res.redirect('/admin/userlist')
+			})
+		}
+	})
+})
+
+// Login 
+app.post('/user/login', function(req, res) {
+	var _user = req.body.user
+	var name = _user.name
+	var password = _user.password
+
+	User.findOne({name: name}, function(err, user) {
+		if (err) {
+			console.log(err)
+		}
+
+		if (!user) {
+			return res.redirect('/')
+		} 
+
+		user.comparePassword(password, function(err, isMatch) {
+			if (err) {
+				console.log(err)
+			}
+
+			if (isMatch) {
+				req.session.user = user
+				return res.redirect('/')
+			} else {
+				console.log('Password is not matched')
+			}
+		})
+	})
+})
+
+// logout
+app.get('/logout', function(req, res) {
+	delete req.session.user 
+	delete app.locals.user
+	res.redirect('/')
+})
+
+// user list page 
+app.get('/admin/userlist', function(req, res) {
+	User.fetch(function(err, users){
+		if (err) {
+			console.log(err)
+		}
+
+		res.render('userlist', {
+			title: 'imooc 用户列表页',
+			users: users
 		})
 	})
 })

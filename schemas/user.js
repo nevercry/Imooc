@@ -38,11 +38,18 @@ UserSchema.pre('save', function(next) {
 				user.password = hash
 				next()
 			})
-
 	})
-
-	next()
 })
+
+UserSchema.methods = {
+	comparePassword: function(_password, cb) {
+		bcrypt.compare(_password, this.password, function(err, isMatch) {
+			if (err) return cb(err)
+
+			cb(null, isMatch)
+		})
+	}
+}
 
 UserSchema.statics = {
 	fetch: function(cb) {
