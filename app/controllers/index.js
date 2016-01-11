@@ -1,5 +1,5 @@
 var Movie = require('../models/movie')
-var Catetory = require('../models/category')
+var Category = require('../models/category')
 
 // index page 
 exports.index = function(req, res) {

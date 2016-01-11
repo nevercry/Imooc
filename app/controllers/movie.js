@@ -1,5 +1,6 @@
 var _ = require('underscore')
 var Movie = require('../models/movie')
+var Category = require('../models/category')
 var Comment = require('../models/comment')
 
 // list page 
@@ -58,7 +59,7 @@ exports.save = function(req, res) {
 	var movieObj = req.body.movie
 	var _movie
 
-	if (id !== 'undefined') {
+	if (id) {
 		Movie.findById(id, function(err, movie) {
 			if (err) {
 				console.log(err)
@@ -74,41 +75,33 @@ exports.save = function(req, res) {
 			})
 		})
 	} else {
-		_movie = new Movie ({
-			doctor: movieObj.doctor,
-			title: movieObj.title,
-			country: movieObj.country,
-			language: movieObj.language,
-			year: movieObj.year,
-			poster: movieObj.poster,
-			summary: movieObj.summary,
-			flash: movieObj.flash
-		})
+		_movie = new Movie (movieObj)
+
+		var categoryId = _movie.category
 
 		_movie.save(function(err, movie) {
 			if (err) {
 				console.log(err)
 			}
 
-			res.redirect('/movie/' + movie._id)
+			Category.findById(categoryId, function(err, category) {
+				category.movies.push(_movie._id)
+				category.save(function(err, category) {
+					res.redirect('/movie/' + movie._id)
+				})
+			})
 		})
 	} 	
 }
 
 // admin  new page 
 exports.new =  function(req, res) {
-	res.render('admin', {
+	Category.find({}, function(err, categories) {
+		res.render('admin', {
 		title: 'imooc 后台录入页',
-		movie: {
-			title: '',
-			doctor: '',
-			country: '',
-			year: '',
-			poster: '',
-			flash: '',
-			summary: '',
-			language: ''
-		}
+		categories: categories,
+		movie: {}
+		})
 	})
 }
 
@@ -118,9 +111,12 @@ exports.update = function(req, res) {
 
 	if (id) {
 		Movie.findById(id, function(err, movie) {
-			res.render('admin', {
+			Category.find({}, function(err, categories) {
+				res.render('admin', {
 				title: 'imooc 后台更新页',
-				movie: movie
+				movie: movie,
+				categories: categories
+				})
 			})
 		})
 	}
