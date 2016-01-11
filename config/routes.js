@@ -2,6 +2,7 @@ var Index = require('../app/controllers/index')
 var User = require('../app/controllers/user')
 var Movie = require('../app/controllers/movie')
 var Commment = require('../app/controllers/comment')
+var Category = require('../app/controllers/category')
 
 
 module.exports = function(app) {
@@ -30,11 +31,16 @@ module.exports = function(app) {
 	app.get('/movie/:id', Movie.detail)
 	app.get('/admin/movie/new', User.loginRequired, User.adminRequired, Movie.new)
 	app.get('/admin/movie/update/:id', User.loginRequired, User.adminRequired, Movie.update)
-	app.post('/admin/movie/', User.loginRequired, User.adminRequired, Movie.save)
+	app.post('/admin/movie', User.loginRequired, User.adminRequired, Movie.save)
 	app.get('/admin/movie/list', User.loginRequired, User.adminRequired, Movie.list)
 	app.delete('/admin/movie/list', User.loginRequired, User.adminRequired, Movie.del)
 
 	// Commment
 	app.post('/user/comment', User.loginRequired, Commment.save)
+
+	// Category
+	app.get('/admin/category/new', User.loginRequired, User.adminRequired, Category.new)
+	app.post('/admin/category', User.loginRequired, User.adminRequired, Category.save)
+	app.get('/admin/category/list', User.loginRequired, User.adminRequired, Category.list)
 }
 
