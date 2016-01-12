@@ -17,3 +17,35 @@ exports.index = function(req, res) {
 		})
 	})		
 }
+
+// search page 
+exports.search = function(req, res) {
+	var catId = req.query.cat
+	var page = Number(req.query.p)
+	var count = 2
+	var index = page * count
+
+	Category
+		.find({_id: catId})
+		.populate({
+			path: 'movies',
+		})
+		.exec(function(err, categories) {
+			if (err) {
+			console.log(err)
+		}
+
+		var category = categories[0] || {}
+		var movies = category.movies || []
+		var results = movies.slice(index, index + count)
+
+		res.render('results', {
+			title: 'imooc 结果列表页',
+			keyword: category.name,
+			currentPage: (1 + page),
+			query: 'cat=' + catId,
+			totalPage: Math.ceil(movies.length / count),
+			movies: results
+		})
+	})		
+}
