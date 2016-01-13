@@ -11,6 +11,10 @@ var MovieSchema = new Schema({
 	flash: String,
 	poster: String,
 	year: Number,
+	pv: {
+		type: Number,
+		default: 0
+	},
 	category: {
 		type: ObjectId,
 		ref: 'Category'
@@ -41,6 +45,7 @@ MovieSchema.statics = {
 	fetch: function(cb) {
 		return this
 			.find({})
+			.populate('category', 'name')
 			.sort('meta.updateAt')
 			.exec(cb)
 	},

@@ -13,6 +13,8 @@ exports.list =  function(req, res) {
 			console.log(err)
 		}
 
+		console.log(movies)
+
 		res.render('list', {
 			title: 'imooc 列表页',
 			movies: movies
@@ -39,6 +41,11 @@ exports.del = function(req, res) {
 exports.detail = function(req, res) {
 	var id = req.params.id
 
+	Movie.update({_id: id}, {$inc: {pv: 1}}, function(err) {
+		if (err) {
+			console.log(err)
+		}
+	})
 	Movie.findById(id, function(err, movie) {
 		Comment
 			.find({movie: id})
