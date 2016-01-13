@@ -2,6 +2,9 @@ var _ = require('underscore')
 var Movie = require('../models/movie')
 var Category = require('../models/category')
 var Comment = require('../models/comment')
+var fs = require('fs')
+var path = require('path')
+var multer = require('multer')
 
 // list page 
 exports.list =  function(req, res) {
@@ -53,11 +56,42 @@ exports.detail = function(req, res) {
 	})
 }
 
+// admin poster 
+exports.savePoster = function(req, res, next) {
+	console.log(req.file)
+	var posterData = req.file
+	var filePath =  posterData.path
+	var originalname = posterData.originalname
+
+	if (originalname) {
+		console.log('有原始图片名字')
+		fs.readFile(filePath, function(err, data) {
+			console.log('修改保存图片')
+			var timestamp = Date.now()
+			var type = posterData.mimetype.split('/')[1]
+			var poster = timestamp + '.' + type
+			var newPath = path.join(__dirname, '../../', 'public/upload/' + poster)
+
+			fs.writeFile(newPath, data, function(err) {
+				req.poster = poster
+				next()
+			})
+		})
+	}
+	else {
+		next()
+	}
+}
+
 // admin post movie
 exports.save = function(req, res) {
 	var id = req.body.movie._id
 	var movieObj = req.body.movie
 	var _movie
+
+	if (req.poster) {
+		movieObj.poster = req.poster
+	}
 
 	if (id) {
 		Movie.findById(id, function(err, movie) {

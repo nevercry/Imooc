@@ -3,7 +3,21 @@ var User = require('../app/controllers/user')
 var Movie = require('../app/controllers/movie')
 var Commment = require('../app/controllers/comment')
 var Category = require('../app/controllers/category')
+var multer = require('multer')
+var path = require('path')
 
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+  	var newPath = path.join(__dirname, '../', 'public/upload/tmp')
+    cb(null, newPath)
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now())
+  }
+})
+
+var upload = multer({ storage: storage })
 
 module.exports = function(app) {
 
@@ -31,7 +45,7 @@ module.exports = function(app) {
 	app.get('/movie/:id', Movie.detail)
 	app.get('/admin/movie/new', User.loginRequired, User.adminRequired, Movie.new)
 	app.get('/admin/movie/update/:id', User.loginRequired, User.adminRequired, Movie.update)
-	app.post('/admin/movie', User.loginRequired, User.adminRequired, Movie.save)
+	app.post('/admin/movie', User.loginRequired, User.adminRequired, upload.single('uploadPoster'), Movie.savePoster, Movie.save)
 	app.get('/admin/movie/list', User.loginRequired, User.adminRequired, Movie.list)
 	app.delete('/admin/movie/list', User.loginRequired, User.adminRequired, Movie.del)
 
