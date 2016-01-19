@@ -40,7 +40,6 @@ module.exports = function(grunt) {
 				reporter: 'spec'
 			},
 			src: ['test/**/*.js']
-			
 		},
 
 		concurrent: {
